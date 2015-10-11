@@ -1,0 +1,330 @@
+/**
+ * :{}
+ * date:Dec 2, 2013 2:36:52 PM
+ * author:wubangjun
+ * version:1.0
+ */
+package com.gome.icms.util;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+
+import com.gome.icms.domain.Account;
+import com.gome.icms.domain.ChangeProConfig;
+import com.gome.icms.domain.DataDic;
+import com.gome.icms.domain.DataDicSchema;
+import com.gome.icms.domain.EmpPosition;
+import com.gome.icms.domain.MaxNo;
+import com.gome.icms.domain.MaxNoKey;
+import com.gome.icms.domain.PositionDefine;
+import com.gome.icms.domain.RightData;
+import com.gome.icms.mapper.ChangeProConfigMapper;
+import com.gome.icms.mapper.DataDicMapper;
+import com.gome.icms.mapper.MaxNoMapper;
+import com.gome.icms.service.EmpPositionService;
+import com.gome.icms.service.PositionDefineService;
+
+/**
+ * @author wubangjun
+ * 
+ */
+public class PubFun {
+	private static SqlSessionFactory sqlSessionFactory = null;
+
+	public static Map<String, String> getSelectData(String codetype) {
+		sqlSessionFactory = (SqlSessionFactory) SpringBeanFactoryUtils
+				.getBean("sqlSessionFactory");
+		SqlSession session = sqlSessionFactory.openSession();
+		DataDicMapper mapper = session.getMapper(DataDicMapper.class);
+		DataDicSchema schema = new DataDicSchema();
+		schema.createCriteria().andCodetypeEqualTo(codetype);
+		schema.setOrderByClause(" code asc");
+		List<DataDic> list = mapper.selectByExample(schema);
+		Map<String, String> map = new TreeMap<String, String>();
+		map.put("", "请选择...");
+		for (DataDic d : list) {
+//			System.out.println(d);
+			map.put(d.getCode(), d.getCodename());
+		}
+		session.close();
+		return map;
+	}
+
+	public static String getSelectData(String codetype, String condition) {
+		return getSelectData(codetype, condition,null);
+	}
+	
+	public static String getSelectData(String codetype, String condition,String checkValue) {
+		sqlSessionFactory = (SqlSessionFactory) SpringBeanFactoryUtils
+				.getBean("sqlSessionFactory");
+		SqlSession session = sqlSessionFactory.openSession();
+		DataDicMapper mapper = session.getMapper(DataDicMapper.class);
+		DataDicSchema schema = new DataDicSchema();
+		schema.createCriteria().andCodetypeEqualTo(codetype);
+		schema.setOrderByClause(" code asc");
+		List<DataDic> list = mapper.selectByExample(schema);
+		StringBuffer option = new StringBuffer("<option value=''>请选择...</option>");
+		for (DataDic d : list) {
+			if(checkValue!=null&&d.getCode().equals(checkValue)){
+				option.append("<option value='" + d.getCode() + "' selected='selected'>"+ d.getCodename() + "</option>");
+			}else{
+				option.append("<option value='" + d.getCode() + "' >"+ d.getCodename() + "</option>");
+			}
+		}
+		session.close();
+		return option.toString();
+	}	
+	
+	public static String getCodeByCodeName(String codetype, String codeName){
+		DataDicMapper mapper = (DataDicMapper)getBean(DataDicMapper.class);
+		DataDicSchema schema = new DataDicSchema();
+		schema.createCriteria().andCodetypeEqualTo(codetype).andCodenameEqualTo(codeName);
+		List<DataDic> list = mapper.selectByExample(schema);
+		if(list!=null&&list.size()>0){
+			return list.get(0).getCode();
+		}else{
+			return "";
+		}
+	}
+	
+	public static boolean isEmptyString(String str){
+		if(str==null||"".equals(str.trim())){
+			return true;
+		}
+		return false;
+	}
+	
+	public static String getCurrentDate() {
+		String pattern = "yyyy-MM-dd";
+		SimpleDateFormat df = new SimpleDateFormat(pattern);
+		Date today = new Date();
+		String tString = df.format(today);
+		return tString;
+	}
+	
+	/**
+	 * 得到当前系统时间 
+	 * @return 当前时间的格式字符串，时间格式为"HH:mm:ss"
+	 */
+	public static String getCurrentTime() {
+		String pattern = "HH:mm:ss";
+		SimpleDateFormat df = new SimpleDateFormat(pattern);
+		Date today = new Date();
+		String tString = df.format(today);
+		return tString;
+	}
+	
+	public synchronized static  String createMaxNo(String noType,int noLength){
+		if (isEmptyString(noType) ||(noLength <= 0))
+        {
+            System.out.println("NoType长度错误或NoLength错误");
+            return null;
+        }
+		sqlSessionFactory = (SqlSessionFactory) SpringBeanFactoryUtils.getBean("sqlSessionFactory");
+		SqlSession session = sqlSessionFactory.openSession();
+		MaxNoMapper mapper = session.getMapper(MaxNoMapper.class);
+        noType = noType.toUpperCase();
+        MaxNoKey key = new MaxNoKey();
+        key.setNolimit(noLength);
+        key.setNotype(noType);
+        MaxNo maxNo = mapper.selectByPrimaryKey(key);
+        if(maxNo == null){
+        	maxNo = new MaxNo();
+        	maxNo.setMaxno(1);
+        	maxNo.setNotype(noType);
+        	maxNo.setNolimit(noLength);
+        	mapper.insert(maxNo);
+        }else{
+        	maxNo.setMaxno(maxNo.getMaxno()+1);
+        	mapper.updateByPrimaryKey(maxNo);
+        }
+        session.commit();
+        session.close();
+        String tStr = String.valueOf(maxNo.getMaxno());
+        tStr = PubFun.LCh(tStr, "0", noLength);
+        return tStr.trim();
+	}
+
+	public synchronized static int createMaxNo(String noType){
+		if (isEmptyString(noType) )
+        {
+            System.out.println("NoType长度错误或NoLength错误");
+            return -1;
+        }
+		sqlSessionFactory = (SqlSessionFactory) SpringBeanFactoryUtils.getBean("sqlSessionFactory");
+		SqlSession session = sqlSessionFactory.openSession();
+		MaxNoMapper mapper = session.getMapper(MaxNoMapper.class);
+        noType = noType.toUpperCase();
+        MaxNoKey key = new MaxNoKey();
+        key.setNolimit(0);
+        key.setNotype(noType);
+        MaxNo maxNo = mapper.selectByPrimaryKey(key);
+        if(maxNo == null){
+        	maxNo = new MaxNo();
+        	maxNo.setMaxno(1);
+        	maxNo.setNotype(noType);
+        	maxNo.setNolimit(0);
+        	mapper.insert(maxNo);
+        }else{
+        	maxNo.setMaxno(maxNo.getMaxno()+1);
+        	mapper.updateByPrimaryKey(maxNo);
+        }
+        session.commit();
+        session.close();
+        return maxNo.getMaxno();
+	}
+	
+	public static String LCh(String sourString, String cChar, int cLen) {
+		int tLen = sourString.length();
+		int i, iMax;
+		String tReturn = "";
+		if (tLen >= cLen) {
+			return sourString;
+		}
+		iMax = cLen - tLen;
+		for (i = 0; i < iMax; i++) {
+			tReturn += cChar;
+		}
+		tReturn = tReturn.trim() + sourString.trim();
+		return tReturn;
+	}
+	
+	public static String getChangeClassName(String procode){
+		sqlSessionFactory = (SqlSessionFactory) SpringBeanFactoryUtils.getBean("sqlSessionFactory");
+		SqlSession session = sqlSessionFactory.openSession();
+		ChangeProConfigMapper mapper = session.getMapper(ChangeProConfigMapper.class);
+		ChangeProConfig changeProConfig = mapper.selectByPrimaryKey(procode);
+		return changeProConfig.getClassname();
+	}
+	
+	public static Object getBean(String beanName){
+		return SpringBeanFactoryUtils.getBean(beanName);
+	}
+
+	public static Object getBean(Class beanName){
+		return SpringBeanFactoryUtils.getBean(beanName);
+	}
+
+	public static String firstToUpper(String str){
+		char c = str.charAt(0);
+		return Character.toUpperCase(c) + str.substring(1);
+	}
+	public static String subString(String localizedMessage, int len) {
+		if(isEmptyString(localizedMessage)){
+			return "";
+		}
+		if(localizedMessage.length()>len){
+			return localizedMessage.substring(0, len);
+		}else{
+			return localizedMessage;
+		}
+	}	
+	
+    public static String unicodeToGBK(String strOriginal)
+    {
+        if (strOriginal != null)
+        {
+            try
+            {
+                if (!isGBKString(strOriginal))
+                {
+                    return new String(strOriginal.getBytes("ISO8859_1"), "GBK");
+                }
+                else
+                {
+                    return strOriginal;
+                }
+
+            }
+            catch (Exception exception)
+            {
+                System.out.println(exception.getMessage());
+                return strOriginal;
+            }
+        }
+        else
+        {
+            return "";
+        }
+    }	
+    
+    /**
+     * 判断是否是GBK编码
+     * @param tStr String
+     * @return boolean
+     */
+    public static boolean isGBKString(String tStr)
+    {
+        int tlength = tStr.length();
+        Integer t = new Integer(0);
+        int t1 = 0;
+        for (int i = 0; i < tlength; i++)
+        {
+            t1 = Integer.parseInt(Integer.toOctalString(tStr.charAt(i)));
+            if (t1 > 511)
+            {
+                return true;
+            }
+        }
+        return false;
+    }	
+    
+    
+    
+    public static void setRightData(RightData rightData,Account account){
+    	if(account.getApAccountpwd().equalsIgnoreCase("admin")){
+    		return ;
+    	}
+    	EmpPositionService empPositionService = (EmpPositionService)PubFun.getBean(EmpPositionService.class);
+    	List<EmpPosition> empPostions = empPositionService.selectEmpByEmpNo(account.getEmpno());
+    	if(empPostions==null||empPostions.size()==0){
+    		return ;
+    	}
+    	PositionDefineService positionDefineService = (PositionDefineService)PubFun.getBean(PositionDefineService.class);
+    	EmpPosition empPosition = null;
+    	for(int i=0;i<empPostions.size();i++){
+    		if(positionDefineService.selectCountByPostCodeAndState(empPostions.get(i).getPositioncode(),"1")>0){
+    			empPosition = empPostions.get(i);
+    			break;
+    		}
+    	}
+    	if(empPosition==null){
+    		return ;
+    	}
+    	if(!isEmptyString(empPosition.getTwobranchname())){//二级分部
+    		rightData.setRightBelongTwoBranch(empPosition.getTwobranchname());
+    		rightData.setRightBelongOneBranch(empPosition.getOnebranchname());
+    		rightData.setRightBelongRegion(empPosition.getRegioncode());
+    		return;
+    	}
+    	if(isEmptyString(empPosition.getTwobranchname())&&!isEmptyString(empPosition.getOnebranchname())){//一级分部
+    		rightData.setRightBelongOneBranch(empPosition.getOnebranchname());
+    		rightData.setRightBelongRegion(getCodeByCodeName("belongregion",empPosition.getRegionname()));
+    		return;
+    	}
+    	if(!isEmptyString(empPosition.getHeadname())){//总部
+    		
+    	}
+    }
+    
+	public static void main(String[] args) {
+//		ApplicationContext context = new ClassPathXmlApplicationContext(
+//				new String[]{"applicationContext_bean.xml",
+//						"applicationContext_other.xml",
+//						"applicationContext.xml"});
+		
+//		System.out.println(PubFun.getBean(WorkFlowMapper.class));;
+//		System.out.println(PubFun.getBean(WorkFlowMapper.class));;
+		
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+		System.out.println(sdf.format(new Date()));
+	}
+
+
+}

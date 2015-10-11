@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:jaxws="http://cxf.apache.org/jaxws"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+                        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
+                        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
+                        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+                        http://cxf.apache.org/jaxws       
+                        http://cxf.apache.org/schemas/jaxws.xsd">
+
+	<context:annotation-config />
+	<context:component-scan base-package="com.base" />
+	<tx:annotation-driven transaction-manager="transactionManager"/>
+	
+	<!-- 数据源配置,使用应用内的C3P0数据库连接池 -->
+	<!--oracle.jdbc.driver.OracleDriver jdbc:oracle:thin:@10.128.16.100:1521:gome -->
+
+	<bean
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="location">
+			<value>classpath:jdbc.properties</value>
+		</property>
+	</bean>
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
+		destroy-method="close">
+		<property name="driverClass" value="${jdbc.driverClassName}" />
+		<property name="jdbcUrl" value="${jdbc.url}" />
+		<property name="user" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+
+		<!-- 测试时使用 -->
+		<!-- <property name="minPoolSize" value="2" /> -->
+		<!-- <property name="maxPoolSize" value="20" /> -->
+		<!-- <property name="initialPoolSize" value="10" /> -->
+
+		<!-- 发布时候打开 -->
+		<property name="minPoolSize" value="20" />
+		<property name="maxPoolSize" value="200" />
+		<property name="initialPoolSize" value="50" />
+
+		<property name="maxIdleTime" value="1800" />
+		<property name="acquireIncrement" value="10" />
+		<property name="maxStatements" value="300" />
+		<property name="maxStatementsPerConnection" value="20" />
+		<property name="idleConnectionTestPeriod" value="1800" />
+		<property name="acquireRetryAttempts" value="30" />
+		<property name="acquireRetryDelay" value="100" />
+		<property name="breakAfterAcquireFailure" value="true" />
+		<property name="testConnectionOnCheckout" value="false" />
+		<property name="numHelperThreads" value="5" />
+		<property name="preferredTestQuery" value="select 1" />
+	</bean>
+
+
+	<!-- sqlSessionFactory -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="typeAliasesPackage" value="com.base.domain" />
+		<property name="configLocation" value="classpath:mybatis-config.xml" />
+		<property name="mapperLocations" value="classpath:com/base/mapper/*Mapper.xml" />
+	</bean>
+
+	<bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg index="0" ref="sqlSessionFactory" />
+	</bean>
+
+	<!-- 配置要扫描的xxxMapper.xml <property name="sqlSessionFactory" ref="sqlSessionFactory" /> -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.base.mapper" />
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
+		<!--<property name="sqlSessionFactory" ref="sqlSessionFactory" /> -->
+	</bean>
+
+	<!-- <property name="dataSource" ref="dataSource"></property> -->
+	<!-- ================================事务相关控制================================================= -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+</beans>

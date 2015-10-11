@@ -1,0 +1,11 @@
+<%@ page language="java" import="java.util.*" pageEncoding="UTF-8"%>
+
+<div id="commDeptSelectorDlg" class="easyui-dialog" title="部门选择" style="padding:0px;width:400px;height:300px;padding:10px"
+	data-options="toolbar: '#commDeptSelectorDlgTb', iconCls:'icon-save', closed: true, modal:true" >
+	<div id="commDeptSelectorDlgTb" style="padding:2px 0">
+		<input id="includeChildDept" type="checkbox" style="margin-left:10px" >包含子部门
+		<div class="panel-tool"><a id="btnClearDept" class="icon-cut" href="javascript:void(0)" title="清除所选部门"></a></div>
+	</div>
+	<ul class="easyui-tree" data-options="url:'user/depts.do?random=<%=new Random().nextInt(300000) %>', method:'get', animate:false,cache:false">
+	</ul>
+	</div>

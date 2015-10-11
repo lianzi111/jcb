@@ -1,0 +1,268 @@
+/**
+ * 类功能描述:{}
+ * date:Dec 17, 2013 2:07:01 PM
+ * author:wubangjun
+ * version:1.0
+ */
+package com.gome.icms.util;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.SocketException;
+
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPClientConfig;
+import org.apache.commons.net.ftp.FTPFile;
+import org.apache.commons.net.ftp.FTPReply;
+import org.apache.log4j.Logger;
+
+import com.gome.icms.util.FtpUtils;
+
+/**
+ * @author wubangjun
+ * 
+ */
+public class FtpUtils {
+	private static int defaultPort = 21;
+	private static FTPClient ftpClient;
+	private static Logger logger = Logger.getLogger(FtpUtils.class);
+
+	public static boolean loginFtp(int port, String hostname, String userName,
+			String password) {
+		try {
+			ftpClient = new FTPClient();
+			FTPClientConfig config = new FTPClientConfig();
+			config.setServerLanguageCode("utf-8");
+			ftpClient.configure(config);
+			ftpClient.connect(hostname, port);
+			logger.info("Connected to " + hostname + ".");
+			logger.info(ftpClient.getReplyString());
+			int reply = ftpClient.getReplyCode();
+			if (!FTPReply.isPositiveCompletion(reply)) {
+				ftpClient.disconnect();
+				logger.info("FTP server refused connection.");
+			}
+			ftpClient.login(userName, password);
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+			try {
+				ftpClient.disconnect();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+			logger.error("登录ftp服务失败,失败原因：",e);
+			return false;
+		}
+		return true;
+	}
+
+	public static boolean loginFtp(String host, String userName, String pwd) {
+		return loginFtp(defaultPort, host, userName, pwd);
+	}
+	public static boolean downLoadFile(String localPath,String remotePath,String remoteFileName){
+		return  downLoadFile(localPath,null,remotePath,remoteFileName);
+	}
+	public static boolean downLoadFile(String localPath,String remoteFileName){
+		return  downLoadFile(localPath,null,null,remoteFileName);
+	}
+	/**
+	 * author：wubangjun
+	 * @param localPath 本地路径
+	 * @param localFileName 本地文件名
+	 * @param remotePath 远程路径 
+	 * @param remoteFileName远程文件名
+	 * @return
+	 * return_type：boolean
+	 * date:Dec 17, 2013 5:13:47 PM
+	 * 方法描述：{下载远程服务器的文件}
+	 */
+	public static boolean downLoadFile(String localPath,String localFileName,String remotePath,String remoteFileName) {
+		BufferedWriter bw = null;
+		BufferedReader br = null;
+		try {
+			if(PubFun.isEmptyString(remoteFileName)){
+				logger.error("下载文件失败,失败原因：下载文件名未传入！");
+				return false;			
+			}
+			if(PubFun.isEmptyString(localPath)){
+				logger.error("下载文件失败,失败原因：本地路径未传入！");
+				return false;			
+			}
+			if(!PubFun.isEmptyString(remotePath)){
+				ftpClient.changeWorkingDirectory(remotePath);
+			}
+			if(PubFun.isEmptyString(localFileName)){//如果未传入使用远程文件名
+				localFileName = remoteFileName;
+			}
+//			bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(localPath+localFileName)));
+//			br = new BufferedReader(new InputStreamReader(ftpClient.retrieveFileStream(remoteFileName)));
+//			String line = null;
+//			while((line = br.readLine())!=null){
+//				bw.write(line);
+//			}
+//			bw.flush();
+//			bw.close();
+//			br.close();
+			
+			FileOutputStream fos = new FileOutputStream(localPath+localFileName);
+			InputStream is = ftpClient.retrieveFileStream(remoteFileName);
+			byte[] b = new byte[1024];
+			int len = 0;
+			while((len=is.read(b))!=-1){
+				fos.write(b, 0, len);
+			}
+			fos.close();
+			is.close();
+			if (!ftpClient.completePendingCommand()) { 
+				ftpClient.logout(); 
+				ftpClient.disconnect(); 
+				return false;
+            } 
+		} catch (IOException e) {
+			e.printStackTrace();
+			try {
+				ftpClient.logout(); 
+				ftpClient.disconnect();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			} 
+			logger.info("下载文件失败,失败原因：",e);
+			return false;
+		}finally{
+			if(bw!=null){
+				try {
+					bw.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			if(br!=null){
+				try {
+					br.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return true;
+	}
+	
+	public static boolean closeConnection(){
+		try {
+			if(ftpClient==null){
+				return true;
+			}
+			ftpClient.logout();
+			ftpClient.disconnect();
+		} catch (IOException e) {
+			e.printStackTrace();
+			logger.info("关闭ftp连接失败,失败原因：",e);
+			return false;
+		}
+		return true;
+	}
+	/**
+	 * author：wubangjun
+	 * @param localPath
+	 * @param localFileName
+	 * @param remotePath
+	 * @param remoteFileName
+	 * @return
+	 * return_type：boolean
+	 * date:Dec 17, 2013 4:43:20 PM
+	 * 方法描述：{下载某个目录下的所有文件}
+	 */
+	public static boolean downLoadAllFile(String localPath,String remotePath) {
+		try {
+			if(!PubFun.isEmptyString(remotePath)){
+				ftpClient.changeWorkingDirectory(remotePath);
+			}
+			FTPFile[] files = ftpClient.listFiles();
+			for(FTPFile file :files ){
+				if(file.isFile()&&file.getName().toLowerCase().endsWith(".xml")){
+					if(!downLoadFile(localPath, remotePath, file.getName())){
+						return false;
+					}
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+	
+	
+	public static void main(String[] args) {
+		try {
+			FTPClient ftp = new FTPClient();
+			FTPClientConfig config = new FTPClientConfig();
+			config.setServerLanguageCode("utf-8");
+			ftp.configure(config);
+			ftp.connect("10.0.222.12", 21);
+			System.out.print(ftp.getReplyString());
+			int reply = ftp.getReplyCode();
+			System.out.println(reply); 
+			if (!FTPReply.isPositiveCompletion(reply)) {
+				ftp.disconnect();
+				System.out.println("FTP server refused connection.");
+			}
+			ftp.login("emp-ms11", "1234567");
+			
+			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("c:/zhri1300.xml")));
+			
+			BufferedReader br = new BufferedReader(new InputStreamReader(ftp.retrieveFileStream("zhri1300.xml")));
+			String line = null;
+			while((line = br.readLine())!=null){
+				bw.write(line);
+			}
+			bw.close();
+			br.close();
+			
+			if (!ftp.completePendingCommand()) { 
+                ftp.logout(); 
+                ftp.disconnect(); 
+            } 
+			bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("c:/zhri1298.xml")));
+			br = new BufferedReader(new InputStreamReader(ftp.retrieveFileStream("zhri1298.xml")));
+			while((line = br.readLine())!=null){
+				bw.write(line);
+			}
+			bw.close();
+			br.close();
+			
+			if (!ftp.completePendingCommand()) { 
+                ftp.logout(); 
+                ftp.disconnect(); 
+            } 
+			
+			
+//			byte[] buffer = new byte[1024];
+//			int len = buffer.length;
+//			while((len = is.read(buffer, 0, len))!=-1){
+//				fos.write(buffer, 0, len);
+//			}
+			System.out.println(ftp);
+			FTPFile[] files = ftp.listFiles();
+			for(FTPFile file :files){
+				System.out.println(file.getName());
+			}
+			
+		} catch (SocketException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	
+
+}

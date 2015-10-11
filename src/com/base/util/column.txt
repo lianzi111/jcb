@@ -1,0 +1,17 @@
+员工编号	,	EmpNo	,	aql
+员工姓名	,	EmpName	,	aql
+系统账号	,	AccountCode	,	aql
+系统账号密码	,	AccountPwd	,	a
+公司代码	,	CompCode	,	aql
+公司名称	,	CompName	,	l
+移动手机号	,	Phone	,	al
+邮箱	,	Email	,	al
+状态	,	State	,	aql
+是否需要修改密码	,	NeedModify	,	a
+密码错误次数	,	ErrorNum	,	
+操作人员	,	Operator	,	l
+操作类型	,	OperatorType	,	
+创建日期	,	CreateDate	,	ql
+创建时间	,	CreateTime	,	
+修改日期	,	ModifyDate	,	
+修改时间	,	ModifyTime	,	
