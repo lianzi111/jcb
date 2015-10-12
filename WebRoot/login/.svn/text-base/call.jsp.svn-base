@@ -1,0 +1,104 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%
+String path = request.getContextPath();
+String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
+%>    
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<link rel="stylesheet" type="text/css" href="../common/css/lanrenzhijia.css" />
+	<script language="JavaScript" src="../common/js/jquery-1.8.3.js"></script>
+<script type="text/javascript">
+function  stuHover() {
+	var cssRule;
+	var newSelector;
+	for (var i = 0; i < document.styleSheets.length; i++){
+		for (var x = 0; x < document.styleSheets[i].rules.length ; x++)
+			{
+			cssRule = document.styleSheets[i].rules[x];
+			if (cssRule.selectorText.indexOf("LI:hover") != -1)
+			{
+				 newSelector = cssRule.selectorText.replace(/LI:hover/gi, "LI.iehover");
+				document.styleSheets[i].addRule(newSelector , cssRule.style.cssText);
+			}
+		}
+	}
+	var getElm = document.getElementById("nav").getElementsByTagName("LI");
+	for (var i=0; i<getElm.length; i++) {
+		getElm[i].onmouseover=function() {
+			this.className+=" iehover";
+		}
+		getElm[i].onmouseout=function() {
+			this.className=this.className.replace(new RegExp(" iehover\\b"), "");
+		}
+	}
+}
+var basePath = "<%=basePath%>";
+	$(document).ready(function(){
+// 		alert(window.screen.availHeight);
+// 		alert(window.screen.availHeight);
+		$("#iframeid").css("height",(window.screen.availHeight-window.screenTop-130)+"px");
+		$.post(basePath+"menu_loadRootTree.action",{menuType:1},
+		function(data){
+// 			if(data.menuTreeStr!=null&&data.menuTreeStr!=''){
+// 				$("#nav").append(data.menuTreeStr);
+// 				stuHover();
+// 			}
+			if(data!=null&&data!=''){
+				$("#nav").append(data);
+				stuHover();
+			}
+		},"json");
+	});
+function logout(){
+	if(confirm('您确定要退出本系统吗？')){
+		$.ajax({type:"POST", url:"login!logonOut.action"}).responseText;
+		top.window.location='<%=basePath%>'+'index.jsp';
+	}
+}
+
+function modifyPwd(){
+	//window.open("modifypwd.jsp","_blank","height=300,width=400,top=300,left=400,toolbar=no,menubar=no,scrollbars=no,Resizable=no,location=no,status=no");
+	window.showModalDialog("modifypwd.jsp?flag=1","","dialogWidth=400px;dialogHeight=300px;status:no");
+}
+</script>	
+</head>
+<body>
+	<div style="z-index:2;height: 104px;background:url('../common/images/login_title_bg_n.png') repeat-x ;margin: 0px;padding-left: 5px;">
+     <div id='popId' style="z-index:2;width: 850px;float: left;"> 
+<!-- 		<table> -->
+<!-- 			<tr> -->
+<!-- 				<td style="width: 184px"> -->
+		<div style="text-align: center;float:left;margin-right: 0px; ">
+			<img src="../common/images/gome_logo.png" style="margin-top: 12px;"><br>
+			<img src="../common/images/system_name.png" style="margin-top: 5px;margin-bottom: 5px;">
+		</div>
+<!-- 		</td> -->
+<!-- 		<td> -->
+		<div style="text-align: center;float:right; margin-top:49px ;margin-left: 10px;width: 640px;" id="menudivid" align="right">
+<%-- 			<%@include file="indextest.jsp" %> --%>
+			<ul id='nav' >
+				
+			</ul>
+		</div>
+<!-- 		</td> -->
+<!-- 		<td > -->
+
+<!-- 		</td> -->
+<!-- 			</tr> -->
+<!-- 		</table> -->
+     </div>
+		<div style="height: 30px;float:right;clear: both;margin: 0 auto;" >
+			<div style="width:80px;height: 30px; margin-right: 8px;">
+				<img src="../common/images/gome_believe.png" style="margin-top: 12px;width: 135px"><br>
+			</div>
+			<div style="margin-top: 12px;text-align: right;margin-right: 10px;">
+				<input  type="image" src="../common/images/home_page.jpg" width="30px" title="注 销" height="30px" onclick="logout();">
+				<input  type="image" src="../common/images/password_modify.png" width="30px" title="密码修改" height="30px" onclick="modifyPwd();">
+			</div>
+		</div>
+     </div>
+     <iframe src="<%=basePath %>login/mainindex.jsp" id="iframeid"  style="width:100%;margin: 0px;padding: 0px" ></iframe>
+</body>
+</html>

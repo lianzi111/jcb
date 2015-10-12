@@ -1,0 +1,21 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<%
+String path = request.getContextPath();
+String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
+%>
+<html>
+<head>
+<title >员工自助</title>
+</head>
+	<!--交互区域-->
+<frameset  rows="12px,*" frameborder="no" border="1" framespacing="0">
+	<frame id="Quick" name="Quick" scrolling="no" src="<%=basePath %>login/bar.jsp" noresize />
+	<frame id="MainBuss" name="MainBuss" scrolling="auto" src="<%=basePath %>login/trunkarea.jsp" noresize />
+</frameset>
+<noframes>
+	<body bgcolor="#ffffff">
+	</body>
+</noframes>
+</html>

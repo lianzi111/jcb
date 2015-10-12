@@ -1,0 +1,407 @@
+<%@ page language="java" import="java.util.*" pageEncoding="UTF-8"%>
+<%@taglib uri="/struts-tags" prefix="s" %>
+<%@page import="com.gome.util.SysConstant"%>
+<%@page import="com.gome.ehm.domain.Account"%>
+<%
+String path = request.getContextPath();
+String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
+%>
+<script type="text/javascript">
+	var basePath = "<%=basePath %>";
+</script>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+	<meta http-equiv="pragma" content="no-cache">
+	<meta http-equiv="cache-control" content="no-cache">
+	<meta http-equiv="expires" content="0">    
+	<meta http-equiv="keywords" content="keyword1,keyword2,keyword3">
+	<meta http-equiv="description" content="This is my page">
+	<link rel="stylesheet" type="text/css" href="../common/date/skin/WdatePicker.css">
+	<link rel="stylesheet" type="text/css" href="../common/css/gsstyle.css">
+	<script language="JavaScript" src="../common/date/WdatePicker.js"></script>
+		<script language="JavaScript" src="../common/js/CheckInput.js"></script>
+	<script type="text/javascript" src="../common/js/jquery-1.8.3.js"></script>
+	<script language="JavaScript" src="../common/js/paging.js"></script>
+	<script language="JavaScript" src="../common/js/jquery.formatDate.js"></script>
+	<style type="text/css">
+	</style>
+<script type="text/javascript">
+$(document).ready(function(){
+	$.post(basePath+"ehm/ygzzpanel_queryMyInfo.action",{},function(data){
+		$("#empname").html(data.employee.name);
+		$("#emporg").text(data.orgStr);
+		$("#emppostion").text(data.empPosition.positionname);
+	},"json");
+	jQuery.ajax({
+		url: basePath + "achieve/examinescheme_queryExamineSchemeByPerson.action",
+		type: "post",
+		data:{},
+		success:function(data){
+			var examineshcmes = data;
+			var str = "<table class='listTable'><tr class='tableHeader'><th>考核类型</th><th>考核方案名称</th></tr>";
+			if(examineshcmes!=null && examineshcmes.length>0){
+				for(var i=0;i<examineshcmes.length;i++){
+					//str += examineshcmes[i].name+"\n";
+					
+					str += "<tr><td>"+examineshcmes[i].typename+"</td><td>"+examineshcmes[i].name+"</td></tr>";
+				}
+			}
+			str +="</table>";
+			jQuery("#exminescheme").html(str);
+		}
+	});
+	//我的专项任务
+	$.post(basePath+"achieve/task_firstPageMySpecialTaskNumber.action",{"page.currentPage":1,"specialTaskNumber.id":''},
+	function(data){
+		$("#SpecialTaskNumberTableId tr").remove(".SpecialTaskNumberTr");
+		$.each(data.specialTaskNumbers, function(i, specialTaskNumber){
+// 			var lightTypeStr = "";
+// 			if(specialTaskNumber.warningflag=='1'){
+// 				lightTypeStr = "<img src=\"../common/images/red_light.png\" style=\"width: 20px;height: 20px;\">";
+// 			}else if(specialTaskNumber.warningflag=='2'){
+// 				lightTypeStr = "<img src=\"../common/images/yellow_light.png\" style=\"width: 20px;height: 20px;\">";
+// 			}else{
+// 				lightTypeStr = "<img src=\"../common/images/green_light.png\" style=\"width: 20px;height: 20px;\">";
+// 			}
+			var progressBar = "";
+			if(specialTaskNumber.completeprogress==null||specialTaskNumber.completeprogress==''){
+				progressBar = "<div style='border: 1px solid blue;width: 100px;height: 10px;' onmousemove=\"seashowtip(0,1,15)\" onmouseout=\"seashowtip(0,0,15)\">"
+								+"<div style='height: 100%;background-color:#ffffff'></div>"
+								+"</div>0%";
+			}else{
+				progressBar = "<div style='border: 1px solid blue;width: 100px;height: 10px;' onmousemove=\"seashowtip("+specialTaskNumber.completeprogress+",1,15)\" onmouseout=\"seashowtip("+specialTaskNumber.completeprogress+",0,15)\">"
+								+"<div style='height: 100%;width: "+specialTaskNumber.completeprogress+"%;background-color: red;'></div>"
+								+"</div>";
+			}
+			
+			var SpecialTaskNumberTrStr = ""
+					+"<tr  class='SpecialTaskNumberTr' onmouseover='changecolor(this);' onmouseout='backcolor(this);'>"
+					+"<td >"+specialTaskNumber.taskname+"</td>"
+					+"<td >"+specialTaskNumber.taskdesc+"</td>"
+					+"<td  >"+specialTaskNumber.receivename+"</td>"
+// 					+"<td>"+specialTaskNumber.jointreceivename+"</td>"
+// 					+"<td>"+specialTaskNumber.secretaryname+"</td>"
+					+"<td >"
+					+progressBar
+// 					+"<div style='border: 1px solid blue;width: 80px;height: 10px;'>"
+// 					+"<div style='height: 100%;width: "+specialTaskNumber.completeprogress+"%;background-color: red;'></div>"
+// 					+"</div>"
+					+"</td>"
+// 					+"<td align='center' >"+lightTypeStr+"</td>"
+// 					+"<td >"+nullToString(specialTaskNumber.statusname)+"</td>"
+					+"<td >"+$.formatDate("yyyy-MM-dd", specialTaskNumber.enddate)+"</td>"
+					+"</tr>";
+				$("#SpecialTaskNumberTableId").append(SpecialTaskNumberTrStr);
+			});
+	},"json");	
+	
+	
+	//我的月度计划 ： ?page.currentPage=1";
+	
+	$.post(basePath+"plan/plan_toQueryFirst.action",{"page.currentPage":1},
+			function(data){
+				$("#plansummaryID tr").remove(".plansummaryTr");
+				$.each(data.planSummaries, function(i, planSummary){
+					
+					var planSummaryTrStr = ""
+							+"<tr  class='plansummaryTr' onmouseover='changecolor(this);' onmouseout='backcolor(this);'>"
+							+"<td width='60px'>"+(i+1)+"</td>"
+							+"<td width='60px'>"+planSummary.superemp+"</td>"
+							+"<td width='60px'>"+planSummary.inspection.substring(0,10)+"</td>"
+							+"<td  width='100px'>"+planSummary.state+"</td>"		 					
+							+"</tr>";
+						$("#plansummaryID").append(planSummaryTrStr);
+					});
+			},"json");	
+	
+	//我的奖罚basePath+"/ehm/rewardPunish_toQuery.action
+	
+	$.post(basePath+"/ehm/rewardPunish_toQueryFirst.action",{"page.currentPage":1},
+			function(data){
+				$("#rewardpublishID tr").remove(".rewardpublishIDTr");
+				$.each(data.rewardpunishs, function(i, rewardpunisha){
+					
+					var rewardpublishIDTrStr = ""
+							+"<tr  class='rewardpublishIDTr' onmouseover='changecolor(this);' onmouseout='backcolor(this);'>"							
+							+"<td>"+rewardpunisha.fdate+"</td>"
+							if (rewardpunisha.fscore==null) {
+								rewardpublishIDTrStr=rewardpublishIDTrStr+"<td></td>";
+							}else{
+								rewardpublishIDTrStr=rewardpublishIDTrStr+"<td>"+rewardpunisha.fscore+"</td>";
+							}							
+							
+		rewardpublishIDTrStr=rewardpublishIDTrStr+"<td>"+rewardpunisha.famount+"</td>"
+							+"<td>"+rewardpunisha.fstartdate+"</td>"
+							+"<td>"+rewardpunisha.fenddate+"</td>"
+							+"</tr>";
+						$("#rewardpublishID").append(rewardpublishIDTrStr);
+					});
+			},"json");	
+	
+	
+	//我的360考核qualityevaluationID  basePath+"/survey/survey_toQuery.action
+	
+// 	$.post(basePath+"/survey/survey_toQueryFirst.action",{"page.currentPage":1},
+// 			function(data){
+// 				$("#qualityevaluationID tr").remove(".qualityevaluationTr");
+// 				$.each(data.queryConditions, function(i, queryCondition){
+					
+// 					var qualityevaluationIDTrStr = ""
+// 							+"<tr  class='qualityevaluationTr' onmouseover='changecolor(this);' onmouseout='backcolor(this);'>"
+							
+// 							+"<td>"+queryCondition.makename+"</td>"
+// 							+"<td>"+queryCondition.startDate.substring(0,10)+"</td>"
+// 							+"<td>"+queryCondition.endDate.substring(0,10)+"</td>"
+// 							+"<td>"+queryCondition.state+"</td>"	
+// 							+"</tr>";
+// 						$("#qualityevaluationID").append(qualityevaluationIDTrStr);
+// 					});
+// 			},"json");	
+	
+	
+	
+	
+
+});
+function initTile(){
+	var day="";
+	var month="";
+	var ampm="";
+	var ampmhour="";
+	var myweekday="";
+	var year="";
+	mydate=new Date();
+	myweekday=mydate.getDay();
+	mymonth=mydate.getMonth()+1;
+	myday= mydate.getDate();
+	myyear= mydate.getYear();
+	year=(myyear > 200) ? myyear : 1900 + myyear;
+	if(myweekday == 0)
+		weekday="星期天";
+	else if(myweekday == 1)
+		weekday="星期一 ";
+	else if(myweekday == 2)
+		weekday="星期二";
+	else if(myweekday == 3)
+		weekday="星期三";
+	else if(myweekday == 4)
+		weekday="星期四";
+	else if(myweekday == 5)
+		weekday="星期五";
+	else if(myweekday == 6)
+		weekday="星期六";
+	<%
+		Account account = (Account)session.getAttribute(SysConstant.Login.LOGIN_USER);
+	%>
+	document.getElementById("welcomeInfo").innerHTML="<%=account.getEmpname()%>,欢迎您登录员工自助系统!今天是"+year+" 年"+mymonth+" 月"+myday+" 日"+weekday;
+}
+
+function seashowtip(tips,flag,iwidth){  
+	var my_tips=document.all.onmousertip;  
+	if(flag==1){  
+	    my_tips.innerHTML=tips+"%";  
+	    my_tips.style.display="";  
+	    my_tips.style.width=iwidth;  
+	    my_tips.style.left=event.clientX+12+document.body.scrollLeft;  
+	    my_tips.style.top=event.clientY+1+document.body.scrollTop;  
+	 }else{  
+	   my_tips.style.display="none";  
+	 }  
+}  
+</script>	
+</head>
+	<body onload="initTile()">
+	<div style="float: left;width: 19%;height: 100%;background-color: #EAE9EA;border-right: 3px solid #464646;padding-right: 3px;">
+		<div style="width: 100%;height: 45px;line-height:45px;background-color: #C7C7C7;margin-top:20px;text-align: center;font-size: 22px;font-weight: bold;">
+			用户信息
+		</div>
+		<div>
+		<table style="margin: 4px;width: 90%">
+   			<tr style="line-height: 200%;border-bottom: 2px;border-bottom: 2px solid black;">
+   				<td width="40px" style="padding: 0px;margin: 0px;border-bottom: 1px solid black;top:0px" >姓名:</td>
+   				<td id="empname" style="padding: 0px;margin: 0px;border-bottom: 1px solid black;"></td>
+   			</tr>
+   			<tr style="line-height: 200%;padding: 0px;margin: 0px;">
+   				<td width="40px" style="padding: 0px;margin: 0px;border-bottom: 1px solid black;vertical-align: top">组织:</td>
+   				<td id="emporg" style="padding: 0px;margin: 0px;border-bottom: 1px solid black;"></td>
+   			</tr>
+   			<tr style="line-height: 200%;">
+   				<td width="40px" style="border-bottom: 1px solid black;padding: 0px;margin: 0px;vertical-align: top">岗位:</td>
+   				<td id="emppostion" style="padding: 0px;margin: 0px;border-bottom: 1px solid black;"></td>
+   			</tr>
+   		</table>
+			<div style="margin-top: 13px;display: none;">
+				<label><font id="welcomeInfo" style="font-size: 9pt;"></font></label>
+			</div>   					
+		</div>
+	</div>	
+	<div style="float: left;width: 80%;height: 100%;">
+		<div style="width: 100%;height: 32%;background-color:#F8F6F8;">
+			<div style="width: 100%;height: 30px;background-color: #1E7EC2;font-size: 15px;font-weight: bold;color: white;line-height:30px ">我的月度计划</div>
+			<div id=queryUserDiv >
+				<table class="listTable">
+					<tbody>
+						<tr class="tableHeader"  id="plansummaryID" style="width: 100%;margin-bottom: 25px">
+							
+							<th width="5%">序号</th>
+							<th width="20%">上级姓名</th>
+							<th width="20%">考核月度</th>
+							<th width="55%">状态</th>
+						</tr>
+						
+						
+				</tbody>
+				</table>
+			</div>
+		</div>
+		<div style="width: 100%;height: 33%;background-color:#F8F6F8;">
+			<div style="width: 100%;height: 30px;background-color: #1E7EC2;font-size: 15px;font-weight: bold;color: white;line-height:30px ">我的专项任务</div>
+				<div >
+				<table  class="listTable"  id="SpecialTaskNumberTableId" style="width: 100%;margin-bottom: 25px">
+						<tr class="tableHeader" >
+								<th width="20%">任务名称</th>
+								<th width="25%">任务描述</th>
+								<th width="20%">承接人</th>
+<!-- 								<th width="50px">秘书</th> -->
+								<th width="10%">完成进度</th>
+<!-- 								<th width="10%">预警</th> -->
+<!-- 								<th width="15%">状态</th> -->
+								<th width="15%">结束日期</th>
+						</tr>
+				</table>						
+			</div>
+		</div>
+		
+		<div style="float: left;width: 100%;height: 33%;">
+			<div style="float: left;width: 49.5%;height: 100%;background-color:#F8F6F8;border-right: 2px solid #464646;">
+				<div style="width: 100%;height: 30px;background-color: #1E7EC2;font-size: 15px;font-weight: bold;color: white;line-height:30px ">我的绩效</div>
+				<div id="exminescheme"></div>
+			</div>
+			<div style="float: left;width: 49.5%;height: 100%;background-color:#F8F6F8;">
+				<div style="width: 100%;height: 30px;background-color: #1E7EC2;font-size: 15px;font-weight: bold;color: white;line-height:30px ">我的奖罚</div>
+				<div>
+				<table class="listTable">
+					<tbody>
+						<tr class="tableHeader" id="rewardpublishID" style="width: 100%;margin-bottom: 25px">
+							<th width="25%">被奖罚时间</th>						
+							<th width="18%">奖罚分值</th>	
+							<th width="18%">奖罚金额</th>									
+							<th width="18%">生效日期</th>
+							<th width="18%">结束日期</th>						
+						</tr>
+					</tbody>
+				</table>
+				</div>
+			</div>
+		</div>
+		<div style="float: left;width: 100%;height: 33%;background-color:#F8F6F8;display: none;">
+			<div style="float: left;width: 49.5%;height: 100%;background-color:#F8F6F8;border-right: 2px solid #464646;">
+				<div style="width: 100%;height: 30px;background-color: #1E7EC2;font-size: 15px;font-weight: bold;color: white;line-height:30px ">我的360考核</div>
+					<div>
+						<table class="listTable">
+							<tbody>
+								<tr class="tableHeader" id="qualityevaluationID" style="width: 100%;margin-bottom: 25px">
+									
+									
+									<th width="40%">问卷名称</th>									
+									<th width="20%">开始日期</th>
+									<th width="20%">结束日期</th>
+									<th width="20%">状态</th>				
+								</tr>
+							</tbody>
+						</table>
+					</div>
+			</div>
+			<div style="float: left;width: 49.5%;height: 100%;background-color:#F8F6F8;">
+				<div style="width: 100%;height: 30px;background-color: #1E7EC2;font-size: 15px;font-weight: bold;color: white;line-height:30px ">我的专项任务</div>
+				<div >
+					<table  class="listTable"  id="SpecialTaskNumberTableId" style="width: 100%;margin-bottom: 25px">
+							<tr class="tableHeader" >
+								<th width="20%">任务名称</th>
+								<th width="25%">任务描述</th>
+								<th width="20%">承接人</th>
+<!-- 								<th width="50px">秘书</th> -->
+								<th width="20%">完成进度</th>
+								<th width="15%">预警</th>
+<!-- 								<th width="50px">状态</th> -->
+							</tr>
+					</table>						
+				</div>
+			</div>		
+		</div>
+	</div>	
+	
+	
+	
+	
+	
+<!-- 	<div style="width:100%;height:50%"> -->
+<!-- 		<div id="Content-Left"> -->
+<!-- 			 <table > -->
+<!--     			<tr > -->
+<!--     				<td class=titleImg><img src="../common/images/s.gif" onclick="showDiv(this,myinfoDiv);" class="titleImgClose" >我的信息</td> -->
+<!--     			</tr> -->
+<!--     		</table> -->
+<!--     		<div id="myinfoDiv" > -->
+<!-- 	    		<table align="left" style="width: 100%;t"> -->
+<!-- 	    			<tr style="line-height: 250%;"> -->
+<!-- 	    				<td width="8%" style="padding: 0px;margin: 0px;">姓名:</td> -->
+<!-- 	    				<td id="empname" style="padding: 0px;margin: 0px;"></td> -->
+<!-- 	    			</tr> -->
+<!-- 	    			<tr style="line-height: 250%;"> -->
+<!-- 	    				<td width="8%" style="padding: 0px;margin: 0px;">组织:</td> -->
+<!-- 	    				<td id="emporg" style="padding: 0px;margin: 0px;"></td> -->
+<!-- 	    			</tr> -->
+<!-- 	    			<tr style="line-height: 250%;"> -->
+<!-- 	    				<td width="8%" >岗位:</td> -->
+<!-- 	    				<td id="emppostion" style="padding: 0px;margin: 0px;"></td> -->
+<!-- 	    			</tr> -->
+<!-- 	    		</table> -->
+<!--     		</div> -->
+<!-- 		</div> -->
+<!-- 		<div id="Content-Middle"> -->
+<!-- 		 	<table > -->
+<!--     			<tr > -->
+<!--     				<td class=titleImg><img src="../common/images/s.gif"  class="titleImgClose">我的奖罚</td> -->
+<!--     			</tr>                        -->
+<!--     		</table> -->
+    		   		
+			
+<!-- 		</div> -->
+<!-- 		<div id="Content-Right"> -->
+<!-- 			<table > -->
+<!--     			<tr > -->
+<!--     				<td class=titleImg><img src="../common/images/s.gif"  class="titleImgClose">我的月度计划</td> -->
+<!--     			</tr> -->
+<!--     		</table> -->
+<!-- 		</div> -->
+<!-- 	</div> -->
+<!-- 	<div style="width:100%;height:50%"> -->
+<!-- 		<div id="Content-Left"> -->
+<!-- 			<table > -->
+<!--     			<tr > -->
+<!--     				<td class=titleImg><img src="../common/images/s.gif"  class="titleImgClose">我的绩效</td> -->
+<!--     			</tr> -->
+<!--     		</table> -->
+<!-- 		</div> -->
+<!-- 		<div id="Content-Middle"> -->
+<!-- 			<table > -->
+<!--     			<tr > -->
+<!--     				<td class=titleImg><img src="../common/images/s.gif"  class="titleImgClose">我的360考核</td> -->
+<!--     			</tr> -->
+<!--     		</table> -->
+<!-- 		</div> -->
+<!-- 		<div id="Content-Right"> -->
+<!-- 			<table > -->
+<!--     			<tr > -->
+<!--     				<td class=titleImg><img src="../common/images/s.gif"  class="titleImgClose">我的专项任务</td> -->
+<!--     			</tr> -->
+<!--     		</table> -->
+<!-- 		</div> -->
+<!-- 	</div> -->
+
+	<div id=onmousertip style="position:absolute;background-color:#ffffff;width:121;height:16;border:0px solid gray;display:none;left:0; top:0"></div>	
+	</body>
+</html>
+ 

@@ -1,0 +1,76 @@
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%
+String path = request.getContextPath();
+String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.getServerPort()+path+"/";
+%>
+<html>
+<head>
+    <title>TreeView</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <script language="JavaScript" src="../common/js/jquery-1.8.3.js"></script>
+	<script language="JavaScript" src="../common/MzTreeView10.js"></script>
+    <script language="JavaScript" src="./menu.js"></script>
+    <style type="text/css">
+        BODY
+        {
+            background-image: url();
+            margin-left: 0px;
+            margin-top: 0px;
+            margin-right: 0px;
+            margin-bottom: 0px;
+            background-color: #f2f9ff;
+            scrollbar-face-color: #99D1F7;
+            scrollbar-highlight-color: #99D1F7;
+            scrollbar-shadow-color: #65A2EA;
+            scrollbar-3dlight-color: #65A2EA;
+            scrollbar-arrow-color: #E0F7FC;
+            scrollbar-track-color: #E0F7FC;
+            scrollbar-darkshadow-color: #FFFFFF;
+        }
+        .style6
+        {
+            font-weight: bold;
+            font-size: 16px;
+            color: #FFFFFF;
+        }
+    </style>
+    <style type="text/css">
+        body, td
+        {
+            font-family: ����;
+            font-size: 12px;
+        }
+        A:LINK, A:VISITED, A:ACTIVE, A:HOVER
+        {
+        	font: tahoma, verdana, arial, helvetica, sans-serif;
+            color: #800080;
+            font-size: 13px;
+            padding-left: 3px;
+            text-decoration: NONE;
+        }
+        a:link
+        {
+            color: #000000;
+        }
+        a:visited
+        {
+            color: #000000;
+        }
+        a:hover
+        {
+            color: #000000;
+        }
+        a:active
+        {
+            color: #000000;
+        }
+    </style>
+</head>
+<body style="margin-left: 10px;"  >
+    <div id="treeviewarea">
+    </div>
+</body>
+</html>
+<script language="JavaScript">
+ getTreeData();
+</script>
