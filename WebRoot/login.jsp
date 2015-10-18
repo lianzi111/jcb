@@ -6,7 +6,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3c.org/TR/1999/REC-html401-19991224/loose.dtd">
 <html>
 <head>
-	<title>聚财宝后台管理系统</title>
+	<title>徽贷宝后台管理系统</title>
 	<meta http-equiv="X-UA-Compatible" content="IE=7" />
 	<meta content="text/html; charset=utf-8" http-equiv=Content-Type>
 	<link rel="stylesheet" type="text/css" href="common/easyui/themes/bootstrap/easyui.css">   

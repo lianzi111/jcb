@@ -5,7 +5,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 %>
 <html>
 <head>
-<title id=indexTitle>聚财宝后台管理系统</title>
+<title id=indexTitle>徽贷宝后台管理系统</title>
 </head>
 <!-- 设置主窗口名字,用于代码选择功能查找主窗口来缓存数据 -->
 <script language="javascript">

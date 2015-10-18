@@ -59,7 +59,7 @@ function initTile(){
 	//((User)session.getAttribute("LoginUser")).getAccount()
 	ManagerAccount account = (ManagerAccount)session.getAttribute(SysConstant.Login.LOGIN_USER);
 	%>
-	document.getElementById("welcomeInfo").innerHTML="<%=account.getUsername()%>,欢迎您登录员工自助系统!今天是"+year+" 年"+mymonth+" 月"+myday+" 日"+weekday;
+	document.getElementById("welcomeInfo").innerHTML="<%=account.getUsername()%>,欢迎您登录徽贷宝后台系统!今天是"+year+"年"+mymonth+"月"+myday+"日"+weekday;
 }
 function logout(){
 	if(confirm('您确定要退出本系统吗？')){
